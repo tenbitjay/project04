@@ -1,0 +1,152 @@
+* { box-sizing: border-box; }
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 28px 16px;
+    display: grid;
+    place-items: center;
+    color: #172033;
+    background: #f3f6fb;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#sudoku-app {
+    width: min(100%, 520px);
+    padding: 24px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 12px 36px rgb(23 32 51 / 10%);
+}
+
+h1 { margin: 0; text-align: center; font-size: 2rem; }
+
+.instructions {
+    margin: 8px 0 18px;
+    color: #566176;
+    text-align: center;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+select, button {
+    min-height: 42px;
+    padding: 8px 14px;
+    border: 1px solid #c8d0dd;
+    border-radius: 7px;
+    font: inherit;
+}
+
+select { background: white; }
+.board-wrap { width: 100%; overflow-x: auto; }
+
+#board {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 3px solid #172033;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+#board td { padding: 0; border: 1px solid #b9c2d0; }
+#board td:nth-child(3n) { border-right: 3px solid #172033; }
+#board tr:nth-child(3n) td { border-bottom: 3px solid #172033; }
+
+#board input {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: clamp(32px, 8vw, 48px);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    outline: 0;
+    background: transparent;
+    color: #1769aa;
+    text-align: center;
+    font: inherit;
+    font-size: clamp(1rem, 5vw, 1.45rem);
+}
+
+#board input:focus { background: #dceeff; box-shadow: inset 0 0 0 2px #3988d1; }
+#board input.given { color: #172033; background: #edf0f5; font-weight: 700; }
+#board input.invalid { color: #b42318; background: #ffe1de; }
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+button {
+    border: 0;
+    color: white;
+    background: #1769aa;
+    cursor: pointer;
+    font-weight: 650;
+}
+
+button:hover { background: #0e4f85; }
+button.secondary { color: #1769aa; background: #e7f1fa; }
+button.secondary:hover { background: #d4e7f7; }
+
+#message {
+    min-height: 1.5em;
+    margin: 14px 0 0;
+    color: #445168;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    body {
+        min-height: 100dvh;
+        padding: max(10px, env(safe-area-inset-top)) 8px max(10px, env(safe-area-inset-bottom));
+        place-items: start center;
+    }
+
+    #sudoku-app {
+        width: 100%;
+        padding: clamp(12px, 4vw, 20px);
+        border-radius: 12px;
+    }
+
+    h1 { font-size: 1.7rem; }
+
+    .instructions {
+        margin: 6px 0 14px;
+        font-size: 0.9rem;
+    }
+
+    .toolbar { margin-bottom: 12px; }
+    select, button { min-height: 40px; }
+
+    #board input {
+        min-height: clamp(26px, 9vw, 38px);
+        font-size: clamp(0.95rem, 5vw, 1.3rem);
+    }
+
+    .controls {
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .controls button {
+        flex: 1;
+        padding: 8px 6px;
+        font-size: 0.9rem;
+    }
+
+    #message { margin-top: 10px; font-size: 0.9rem; }
+}
+
+#message.success {
+    color: #167447;
+    font-weight: 700;
+}
