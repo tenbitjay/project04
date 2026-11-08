@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f2">
+  <title>Pet home monitor</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Pawprint home">
+        <span class="brand-mark" aria-hidden="true">p</span>
+        <span>pawprint<span class="brand-period">.</span></span>
+      </a>
+      <p class="side-label">YOUR HOME</p>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a class="nav-link active" href="#overview"><span aria-hidden="true">◫</span> Overview</a>
+        <a class="nav-link" href="#feeding"><span aria-hidden="true">◉</span> Feeding log</a>
+        <a class="nav-link" href="#movement"><span aria-hidden="true">⌁</span> Movement</a>
+        <a class="nav-link" href="#camera"><span aria-hidden="true">▣</span> Camera</a>
+      </nav>
+      <div class="sidebar-pets">
+        <div class="side-heading"><p class="side-label">YOUR PETS</p><button class="icon-button" id="open-pet-form" type="button" aria-label="Add a pet">+</button></div>
+        <div id="pet-list" class="pet-list"></div>
+      </div>
+      <div class="sidebar-bottom">
+        <div class="help-card">
+          <span class="help-icon" aria-hidden="true">✦</span>
+          <p>Every little detail helps you care for them better.</p>
+        </div>
+        <span class="privacy-note"><span aria-hidden="true">●</span> Your data stays on this device</span>
+      </div>
+    </aside>
+
+    <main id="overview" class="main-content">
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-mark" aria-hidden="true">p</span> pawprint<span class="brand-period">.</span></div>
+        <p id="today-label" class="date-label"></p>
+        <button id="open-pet-form-top" class="button button-dark" type="button"><span aria-hidden="true">+</span> Add a pet</button>
+      </header>
+
+      <section class="welcome-row">
+        <div>
+          <p class="eyebrow">YOUR LITTLE WORLD, AT A GLANCE</p>
+          <h1>Good day<span class="heading-dot">.</span></h1>
+          <p class="subtitle">A little more insight into their everyday.</p>
+        </div>
+        <div class="date-pill"><span aria-hidden="true">☼</span> <span id="date-pill-label"></span></div>
+      </section>
+
+      <section class="stats-grid" aria-label="Today's summary">
+        <article class="stat-card calories-card">
+          <div class="stat-top"><span class="stat-icon peach" aria-hidden="true">◒</span><span class="stat-trend">TODAY</span></div>
+          <p class="stat-label">Calories logged</p>
+          <p class="stat-value"><span id="calorie-total">0</span><span class="stat-unit">kcal</span></p>
+          <p id="calorie-caption" class="stat-foot">From today's feeding entries</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top"><span class="stat-icon green" aria-hidden="true">♧</span><span class="stat-trend">AT HOME</span></div>
+          <p class="stat-label">Pets in your care</p>
+          <p class="stat-value"><span id="pet-total">0</span><span class="stat-unit">pets</span></p>
+          <p class="stat-foot">Every one of them, accounted for</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top"><span class="stat-icon blue" aria-hidden="true">◷</span><span class="stat-trend">TODAY</span></div>
+          <p class="stat-label">Meals recorded</p>
+          <p class="stat-value"><span id="meal-total">0</span><span class="stat-unit">meals</span></p>
+          <p class="stat-foot">Across all your pets</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top"><span class="stat-icon lilac" aria-hidden="true">⌁</span><span class="stat-trend">TODAY</span></div>
+          <p class="stat-label">Movement notes</p>
+          <p class="stat-value"><span id="movement-total">0</span><span class="stat-unit">events</span></p>
+          <p class="stat-foot">Activities you’ve observed</p>
+        </article>
+      </section>
+
+      <div id="app-message" class="app-message" role="status" aria-live="polite"></div>
+
+      <section class="content-grid">
+        <article id="feeding" class="panel feeding-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">NOURISH & FLOURISH</p><h2>Today's feeding</h2></div>
+            <span class="panel-badge"><span class="live-dot"></span> LIVE LOG</span>
+          </div>
+          <form id="feeding-form" class="entry-form">
+            <label>Pet
+              <select id="feeding-pet" name="pet" required>
+                <option value="">Add a pet first</option>
+              </select>
+            </label>
+            <label>Food
+              <input name="food" type="text" maxlength="60" placeholder="e.g. Chicken bites" required>
+            </label>
+            <div class="form-pair">
+              <label>Pieces
+                <input name="quantity" type="number" min="0.01" step="any" placeholder="2" required>
+              </label>
+              <label>kcal per piece
+                <input name="caloriesPerPiece" type="number" min="0" step="any" placeholder="12" required>
+              </label>
+            </div>
+            <p class="calculation-hint">Calories logged = pieces × kcal per piece</p>
+            <button class="button button-primary form-submit" type="submit">＋ &nbsp;Log a meal</button>
+          </form>
+          <div class="list-heading"><h3>Recent meals</h3><span id="meal-list-count">0 entries</span></div>
+          <div id="feeding-list" class="entry-list"></div>
+        </article>
+
+        <div class="right-column">
+          <article class="panel daily-panel">
+            <div class="panel-heading compact">
+              <div><p class="eyebrow">A GENTLE CHECK-IN</p><h2>Daily calories</h2></div>
+              <span class="round-icon" aria-hidden="true">◒</span>
+            </div>
+            <p class="daily-intro">Calories from meals you’ve recorded today.</p>
+            <div id="calorie-breakdown" class="breakdown-list"></div>
+            <p class="estimate-note"><span aria-hidden="true">ⓘ</span> Estimates only. Check feeding needs with your vet.</p>
+          </article>
+
+          <article id="camera" class="panel camera-panel">
+            <div class="panel-heading compact">
+              <div><p class="eyebrow">A WINDOW INTO HOME</p><h2>Camera view</h2></div>
+              <span class="camera-status"><span class="status-dot"></span><span id="camera-status">OFFLINE</span></span>
+            </div>
+            <div class="camera-view" id="camera-view">
+              <video id="camera-video" autoplay muted playsinline hidden></video>
+              <div class="camera-placeholder" id="camera-placeholder">
+                <span class="camera-symbol" aria-hidden="true">▧</span>
+                <p>Your camera view will appear here</p>
+                <span>Preview only · no recording</span>
+              </div>
+            </div>
+            <div class="camera-actions">
+              <p>Connect a camera for a live preview.</p>
+              <button id="camera-toggle" class="button button-outline" type="button">Start camera</button>
+            </div>
+            <p class="camera-disclaimer">This preview does not identify pets or analyze movement.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="movement" class="panel movement-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">LITTLE ADVENTURES</p><h2>Movement notes</h2></div>
+          <span class="movement-caption">Your observations, all in one place</span>
+        </div>
+        <form id="movement-form" class="movement-form">
+          <label>Pet
+            <select id="movement-pet" name="pet" required><option value="">Add a pet first</option></select>
+          </label>
+          <label>Room or area
+            <input name="location" type="text" maxlength="60" placeholder="e.g. Living room" required>
+          </label>
+          <label>What were they up to?
+            <input name="activity" type="text" maxlength="80" placeholder="e.g. Napping in the sun" required>
+          </label>
+          <label class="duration-field">Minutes
+            <input name="duration" type="number" min="1" step="1" placeholder="10" required>
+          </label>
+          <button class="button button-primary movement-submit" type="submit">＋ &nbsp;Add note</button>
+        </form>
+        <div class="list-heading movement-list-heading"><h3>Today's activity</h3><span id="movement-list-count">0 notes</span></div>
+        <div id="movement-list" class="movement-list"></div>
+      </section>
+
+      <footer class="footer-note">Made with care for the ones with paws <span aria-hidden="true">♡</span></footer>
+    </main>
+  </div>
+
+  <dialog id="pet-dialog" class="pet-dialog">
+    <form id="pet-form" method="dialog">
+      <div class="dialog-heading">
+        <div><p class="eyebrow">GROW YOUR LITTLE CREW</p><h2>Add a pet</h2></div>
+        <button class="icon-button close-dialog" type="button" aria-label="Close">×</button>
+      </div>
+      <label>Name
+        <input name="name" type="text" maxlength="40" placeholder="What do you call them?" required>
+      </label>
+      <label>Type of pet
+        <select name="species" required>
+          <option value="">Choose one</option>
+          <option>Cat</option><option>Dog</option><option>Rabbit</option><option>Bird</option><option>Other</option>
+        </select>
+      </label>
+      <label>Tag or collar note <span class="optional">(optional)</span>
+        <input name="tag" type="text" maxlength="60" placeholder="e.g. Red collar, AirTag on harness">
+      </label>
+      <p class="dialog-note">A tag note is just for your reference; this app cannot read AirTag location data.</p>
+      <button class="button button-primary form-submit" type="submit">Add to my pets</button>
+    </form>
+  </dialog>
+</body>
+</html>
