@@ -1,58 +1,40 @@
-# Sudoku Application
+# Sudoku Community Game
 
-This is a web-based Sudoku application that allows users to play Sudoku in a browser environment. The application includes features for starting a new game, displaying the game board, and validating user inputs.
+A browser-based Sudoku game with a live global leaderboard and world chat. The game itself is static and is hosted on GitHub Pages; Supabase provides anonymous player identities, persistent scores, chat history, and realtime updates.
 
-## Project Structure
+## Local play
 
-```
-sudoku-app
-├── index.html
-├── css
-│   └── styles.css
-├── js
-│   ├── app.js
-│   ├── board.js
-│   └── sudoku.js
-└── README.md
-```
+Open `index.html` in a browser to play Sudoku without the community features. To use the leaderboard and chat, configure Supabase as described below.
 
-## Installation
+## Configure Supabase
 
-To run the Sudoku application, simply open the `index.html` file in your web browser. There are no additional dependencies to install.
+1. Create a Supabase project.
+2. In **Authentication → Sign In / Providers**, enable **Anonymous Sign-Ins**.
+3. Open the Supabase **SQL Editor** and run [`supabase/setup.sql`](./supabase/setup.sql).
+4. In **Project Settings → API**, copy the project URL and the public `anon` key into [`js/config.js`](./js/config.js):
+
+   ```js
+   window.SUDOKU_SUPABASE_CONFIG = {
+       url: "https://your-project.supabase.co",
+       anonKey: "your-public-anon-key"
+   };
+   ```
+
+   The `anon` key is intended for browser use. **Never put a Supabase `service_role` key in this app or commit it to GitHub.**
+5. Commit and push the changes to `main`. The GitHub Actions workflow deploys the app to Pages.
+
+The database uses row-level security. Players can read the public leaderboard and recent chat, but nickname, score, and chat writes go through database functions. Chat messages are limited to 280 characters and rate-limited per anonymous player.
+
+## Playing with others
+
+- Choose a nickname to join. Your anonymous player session is saved in that browser.
+- Solve a puzzle to submit a score. Easy, Medium, and Hard have different base points; faster solves earn a time bonus. Each player’s best score per difficulty contributes to their total.
+- Chat is shared globally and updates live. Use **Refresh** if a live connection is temporarily unavailable.
+- A score is tied to the browser’s anonymous session, not a verified account, and the client reports its solve time. This is a casual leaderboard, not a cheat-proof competition. Anyone can read public chat, so do not share personal information.
+- Before inviting a large public audience, configure Supabase CAPTCHA and monitor usage. Chat cooldowns apply per anonymous session and are not a complete spam-prevention system.
 
 ## Hosting on GitHub Pages
 
-The app is a static website and can be hosted on GitHub Pages. The repository includes a GitHub Actions workflow that publishes `sudoku-app-1` whenever changes to that folder are pushed to `main`.
+The repository workflow publishes the contents of `sudoku-app-1` to the root of the Pages site. In the repository’s **Settings → Pages**, set **Source** to **GitHub Actions**. After a successful deployment, share:
 
-To enable deployment:
-
-1. In the repository on GitHub, open **Settings → Pages**.
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-3. Push the app and workflow to the `main` branch, or run the **Deploy Sudoku app to GitHub Pages** workflow from the **Actions** tab.
-
-Once deployment succeeds, share the site at:
-
-`https://tenbitjay.github.io/project04/sudoku-app-1/`
-
-## Running the Application
-
-1. Open `index.html` in your preferred web browser.
-2. The Sudoku game will be displayed in the browser.
-3. You can make moves by clicking on the cells and entering the numbers you want to place.
-4. The game will validate your moves and update the board accordingly.
-5. The game ends when you successfully fill the board according to Sudoku rules.
-
-## How to Play
-
-1. The game will display a Sudoku board.
-2. Click on a cell to select it and enter the number you want to place.
-3. The game will validate your moves and update the board accordingly.
-4. The game ends when you successfully fill the board according to Sudoku rules.
-
-## Contributing
-
-Feel free to submit issues or pull requests if you would like to contribute to the project.
-
-## License
-
-This project is licensed under the MIT License.
+`https://tenbitjay.github.io/project04/`

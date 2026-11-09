@@ -4,21 +4,27 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: 28px 16px;
-    display: grid;
-    place-items: center;
     color: #172033;
     background: #f3f6fb;
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-#sudoku-app {
-    width: min(100%, 520px);
-    padding: 24px;
+.page-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.9fr);
+    align-items: start;
+    gap: 20px;
+    width: min(100%, 1120px);
+    margin: 0 auto;
+}
+
+#sudoku-app, .community-panel {
     border-radius: 16px;
     background: #fff;
     box-shadow: 0 12px 36px rgb(23 32 51 / 10%);
 }
 
+#sudoku-app { width: 100%; padding: 24px; }
 h1 { margin: 0; text-align: center; font-size: 2rem; }
 
 .instructions {
@@ -44,6 +50,7 @@ select, button {
 }
 
 select { background: white; }
+#game-timer { min-width: 4.5em; color: #445168; font-variant-numeric: tabular-nums; }
 .board-wrap { width: 100%; overflow-x: auto; }
 
 #board {
@@ -96,6 +103,7 @@ button {
 button:hover { background: #0e4f85; }
 button.secondary { color: #1769aa; background: #e7f1fa; }
 button.secondary:hover { background: #d4e7f7; }
+button:disabled, input:disabled { cursor: not-allowed; opacity: 0.55; }
 
 #message {
     min-height: 1.5em;
@@ -104,49 +112,93 @@ button.secondary:hover { background: #d4e7f7; }
     text-align: center;
 }
 
+#message.success { color: #167447; font-weight: 700; }
+
+.community-panel { overflow: hidden; }
+.community-panel section { padding: 18px 20px; }
+.community-panel section + section { border-top: 1px solid #e5e9f0; }
+.community-panel h2 { margin: 0; font-size: 1.15rem; }
+.community-status, .section-note, .chat-note, .small-status { color: #566176; }
+.community-status { margin: 8px 0 12px; font-size: 0.9rem; }
+.join-form label { display: block; margin-bottom: 6px; font-weight: 600; }
+.inline-form, .chat-form { display: flex; gap: 8px; }
+.inline-form input, .chat-form input {
+    min-width: 0;
+    flex: 1;
+    padding: 9px 10px;
+    border: 1px solid #c8d0dd;
+    border-radius: 7px;
+    font: inherit;
+}
+.join-form small, .chat-note { display: block; margin-top: 6px; color: #667085; }
+.change-nickname { margin-top: 4px; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.refresh-button { min-height: 34px; padding: 5px 10px; font-size: 0.85rem; }
+.section-note { margin: 6px 0 12px; font-size: 0.82rem; }
+.leaderboard-list, .chat-messages { margin: 0; padding: 0; list-style: none; }
+.leaderboard-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #eef0f4;
+}
+.leaderboard-list li:last-child { border-bottom: 0; }
+.leaderboard-list .rank { width: 1.7em; color: #667085; }
+.leaderboard-list .player-name { flex: 1; overflow-wrap: anywhere; }
+.leaderboard-list strong { white-space: nowrap; }
+.empty-state { padding: 12px 0; color: #667085; font-size: 0.9rem; }
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 270px;
+    overflow-y: auto;
+    margin: 12px 0;
+    padding: 4px 2px;
+}
+.chat-message { overflow-wrap: anywhere; }
+.chat-message header { display: flex; justify-content: space-between; gap: 8px; }
+.chat-message time { color: #667085; font-size: 0.75rem; white-space: nowrap; }
+.chat-message p { margin: 3px 0 0; color: #344054; white-space: pre-wrap; }
+.chat-note { font-size: 0.8rem; }
+.small-status { min-height: 1.2em; margin: 6px 0 0; font-size: 0.8rem; }
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+[hidden] { display: none !important; }
+
+@media (max-width: 800px) {
+    .page-layout { grid-template-columns: minmax(0, 1fr); max-width: 560px; }
+}
+
 @media (max-width: 600px) {
     body {
         min-height: 100dvh;
         padding: max(10px, env(safe-area-inset-top)) 8px max(10px, env(safe-area-inset-bottom));
-        place-items: start center;
     }
 
     #sudoku-app {
-        width: 100%;
         padding: clamp(12px, 4vw, 20px);
         border-radius: 12px;
     }
 
     h1 { font-size: 1.7rem; }
-
-    .instructions {
-        margin: 6px 0 14px;
-        font-size: 0.9rem;
-    }
-
+    .instructions { margin: 6px 0 14px; font-size: 0.9rem; }
     .toolbar { margin-bottom: 12px; }
     select, button { min-height: 40px; }
-
     #board input {
         min-height: clamp(26px, 9vw, 38px);
         font-size: clamp(0.95rem, 5vw, 1.3rem);
     }
-
-    .controls {
-        gap: 8px;
-        margin-top: 14px;
-    }
-
-    .controls button {
-        flex: 1;
-        padding: 8px 6px;
-        font-size: 0.9rem;
-    }
-
+    .controls { gap: 8px; margin-top: 14px; }
+    .controls button { flex: 1; padding: 8px 6px; font-size: 0.9rem; }
     #message { margin-top: 10px; font-size: 0.9rem; }
-}
-
-#message.success {
-    color: #167447;
-    font-weight: 700;
+    .community-panel section { padding: 16px; }
 }

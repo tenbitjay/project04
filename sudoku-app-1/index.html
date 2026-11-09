@@ -4,370 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f3f6fb">
+    <meta name="description" content="Play Sudoku, compare scores, and chat with players around the world.">
     <title>Sudoku Game</title>
-    <style>
-        * { box-sizing: border-box; }
-
-        body {
-            min-height: 100vh;
-            margin: 0;
-            padding: 28px 16px;
-            display: grid;
-            place-items: center;
-            color: #172033;
-            background: #f3f6fb;
-            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-        }
-
-        #sudoku-app {
-            width: min(100%, 520px);
-            padding: 24px;
-            border-radius: 16px;
-            background: #fff;
-            box-shadow: 0 12px 36px rgb(23 32 51 / 10%);
-        }
-
-        h1 { margin: 0; text-align: center; font-size: 2rem; }
-
-        .instructions {
-            margin: 8px 0 18px;
-            color: #566176;
-            text-align: center;
-        }
-
-        .toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        select, button {
-            min-height: 42px;   
-            padding: 8px 14px;
-            border: 1px solid #c8d0dd;
-            border-radius: 7px;
-            font: inherit;
-        }
-
-        select { background: white; }
-        .board-wrap { width: 100%; overflow-x: auto; }
-
-        #board {
-            width: 100%;
-            aspect-ratio: 1;
-            border: 3px solid #172033;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        #board td { padding: 0; border: 1px solid #b9c2d0; }
-        #board td:nth-child(3n) { border-right: 3px solid #172033; }
-        #board tr:nth-child(3n) td { border-bottom: 3px solid #172033; }
-
-        #board input {
-            display: block;
-            width: 100%;
-            height: 100%;
-            min-height: clamp(32px, 8vw, 48px);
-            padding: 0;
-            border: 0;
-            border-radius: 0;
-            outline: 0;
-            background: transparent;
-            color: #1769aa;
-            text-align: center;
-            font: inherit;
-            font-size: clamp(1rem, 5vw, 1.45rem);
-        }
-
-        #board input:focus { background: #dceeff; box-shadow: inset 0 0 0 2px #3988d1; }
-        #board input.given { color: #172033; background: #edf0f5; font-weight: 700; }
-        #board input.invalid { color: #b42318; background: #ffe1de; }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 18px;
-        }
-
-        button {
-            border: 0;
-            color: white;
-            background: #1769aa;
-            cursor: pointer;
-            font-weight: 650;
-        }
-
-        button:hover { background: #0e4f85; }
-        button.secondary { color: #1769aa; background: #e7f1fa; }
-        button.secondary:hover { background: #d4e7f7; }
-
-        #message {
-            min-height: 1.5em;
-            margin: 14px 0 0;
-            color: #445168;
-            text-align: center;
-        }
-
-        #message.success { color: #167447; font-weight: 700; }
-
-        @media (max-width: 600px) {
-            body {
-                min-height: 100vh;
-                min-height: 100dvh;
-                padding: max(10px, env(safe-area-inset-top)) 8px max(10px, env(safe-area-inset-bottom));
-                place-items: start center;
-            }
-
-            #sudoku-app {
-                width: 100%;
-                padding: clamp(12px, 4vw, 20px);
-                border-radius: 12px;
-            }
-
-            h1 { font-size: 1.7rem; }
-            .instructions { margin: 6px 0 14px; font-size: 0.9rem; }
-            .toolbar { margin-bottom: 12px; }
-            select, button { min-height: 40px; }
-
-            #board input {
-                min-height: clamp(26px, 9vw, 38px);
-                font-size: clamp(0.95rem, 5vw, 1.3rem);
-            }
-
-            .controls { gap: 8px; margin-top: 14px; }
-            .controls button { flex: 1; padding: 8px 6px; font-size: 0.9rem; }
-            #message { margin-top: 10px; font-size: 0.9rem; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <main id="sudoku-app">
-        <h1>Sudoku</h1>
-        <p class="instructions">Fill every row, column, and 3×3 box with numbers 1–9.</p>
+    <div class="page-layout">
+        <main id="sudoku-app">
+            <h1>Sudoku</h1>
+            <p class="instructions">Fill every row, column, and 3×3 box with numbers 1–9.</p>
 
-        <div class="toolbar">
-            <label for="difficulty">Difficulty</label>
-            <select id="difficulty">
-                <option value="easy">Easy</option>
-                <option value="medium" selected>Medium</option>
-                <option value="hard">Hard</option>
-            </select>
-        </div>
+            <div class="toolbar">
+                <label for="difficulty">Difficulty</label>
+                <select id="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <span id="game-timer" aria-label="Time elapsed">00:00</span>
+            </div>
 
-        <div class="board-wrap">
-            <table id="board" aria-label="Sudoku puzzle">
-                <tbody></tbody>
-            </table>
-        </div>
+            <div class="board-wrap">
+                <table id="board" aria-label="Sudoku puzzle">
+                    <tbody></tbody>
+                </table>
+            </div>
 
-        <div class="controls">
-            <button id="new-game" type="button">New Game</button>
-            <button id="save-game" type="button" class="secondary">Save Game</button>
-        </div>
-        <p id="message" role="status" aria-live="polite"></p>
-    </main>
+            <div class="controls">
+                <button id="new-game" type="button">New Game</button>
+                <button id="save-game" type="button" class="secondary">Save Game</button>
+            </div>
+            <p id="message" role="status" aria-live="polite"></p>
+        </main>
 
-    <script>
-        (() => {
-            "use strict";
+        <aside class="community-panel" aria-label="Sudoku community">
+            <section class="player-section">
+                <h2>Join the community</h2>
+                <p id="community-status" class="community-status" role="status" aria-live="polite">
+                    Connecting to the community…
+                </p>
+                <form id="join-form" class="join-form" hidden>
+                    <label for="nickname">Choose a nickname</label>
+                    <div class="inline-form">
+                        <input id="nickname" name="nickname" type="text" minlength="2" maxlength="20"
+                               autocomplete="nickname" pattern="[A-Za-z0-9][A-Za-z0-9 _-]{1,19}" required>
+                        <button type="submit">Join</button>
+                    </div>
+                    <small>2–20 letters, numbers, spaces, underscores, or hyphens.</small>
+                </form>
+                <button id="change-nickname" type="button" class="secondary change-nickname" hidden>
+                    Change nickname
+                </button>
+            </section>
 
-            const STORAGE_KEY = "sudoku-game-save-v1";
-            const EMPTY_CELLS = { easy: 35, medium: 45, hard: 54 };
-            const tableBody = document.querySelector("#board tbody");
-            const difficultySelect = document.getElementById("difficulty");
-            const message = document.getElementById("message");
+            <section class="leaderboard-section">
+                <div class="section-heading">
+                    <h2>Global leaderboard</h2>
+                    <button id="refresh-leaderboard" type="button" class="secondary refresh-button">Refresh</button>
+                </div>
+                <p class="section-note">Points add up across your best Easy, Medium, and Hard games.</p>
+                <ol id="leaderboard" class="leaderboard-list" aria-live="polite">
+                    <li class="empty-state">Scores will appear here.</li>
+                </ol>
+                <p id="leaderboard-status" class="small-status" role="status" aria-live="polite"></p>
+            </section>
 
-            let puzzle = [];
-            let solution = [];
-            let board = [];
+            <section class="chat-section">
+                <div class="section-heading">
+                    <h2>World chat</h2>
+                    <button id="refresh-chat" type="button" class="secondary refresh-button">Refresh</button>
+                </div>
+                <ol id="chat-messages" class="chat-messages" aria-label="Recent world chat messages"
+                    aria-live="polite">
+                    <li class="empty-state">Chat messages will appear here.</li>
+                </ol>
+                <form id="chat-form" class="chat-form">
+                    <label class="visually-hidden" for="chat-input">Write a chat message</label>
+                    <input id="chat-input" name="message" type="text" maxlength="280"
+                           placeholder="Write a message…" autocomplete="off" required disabled>
+                    <button type="submit" disabled>Send</button>
+                </form>
+                <small class="chat-note">Be kind. Messages are public.</small>
+                <p id="chat-status" class="small-status" role="status" aria-live="polite"></p>
+            </section>
+        </aside>
+    </div>
 
-            function shuffled(values) {
-                const result = [...values];
-                for (let i = result.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [result[i], result[j]] = [result[j], result[i]];
-                }
-                return result;
-            }
-
-            function generateSolution() {
-                const rows = shuffled([0, 1, 2]).flatMap(band =>
-                    shuffled([0, 1, 2]).map(row => band * 3 + row)
-                );
-                const columns = shuffled([0, 1, 2]).flatMap(stack =>
-                    shuffled([0, 1, 2]).map(column => stack * 3 + column)
-                );
-                const digits = shuffled([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-
-                return rows.map(row => columns.map(column =>
-                    digits[(row * 3 + Math.floor(row / 3) + column) % 9]
-                ));
-            }
-
-            function startNewGame() {
-                solution = generateSolution();
-                puzzle = solution.map(row => [...row]);
-                board = solution.map(row => [...row]);
-                const cells = shuffled(Array.from({ length: 81 }, (_, index) => index));
-                const emptyCount = EMPTY_CELLS[difficultySelect.value] ?? EMPTY_CELLS.medium;
-
-                for (const index of cells.slice(0, emptyCount)) {
-                    const row = Math.floor(index / 9);
-                    const column = index % 9;
-                    puzzle[row][column] = 0;
-                    board[row][column] = 0;
-                }
-
-                renderBoard();
-                message.textContent = "New game started.";
-            }
-
-            function renderBoard() {
-                tableBody.replaceChildren();
-
-                for (let row = 0; row < 9; row++) {
-                    const tr = document.createElement("tr");
-                    for (let column = 0; column < 9; column++) {
-                        const td = document.createElement("td");
-                        const input = document.createElement("input");
-                        input.type = "text";
-                        input.inputMode = "numeric";
-                        input.maxLength = 1;
-                        input.autocomplete = "off";
-                        input.setAttribute("aria-label", `Row ${row + 1}, column ${column + 1}`);
-
-                        if (puzzle[row][column] !== 0) {
-                            input.value = String(puzzle[row][column]);
-                            input.readOnly = true;
-                            input.classList.add("given");
-                        } else {
-                            input.value = board[row][column] ? String(board[row][column]) : "";
-                            input.addEventListener("input", () => {
-                                input.value = input.value.replace(/[^1-9]/g, "").slice(0, 1);
-                                board[row][column] = Number(input.value) || 0;
-                                updateBoard();
-                            });
-                        }
-
-                        td.appendChild(input);
-                        tr.appendChild(td);
-                    }
-                    tableBody.appendChild(tr);
-                }
-                updateBoard();
-            }
-
-            function findConflicts() {
-                const conflicts = new Set();
-
-                function checkGroup(cells) {
-                    const seen = new Map();
-                    for (const [row, column] of cells) {
-                        const value = board[row][column];
-                        if (!value) continue;
-                        if (seen.has(value)) {
-                            const [otherRow, otherColumn] = seen.get(value);
-                            conflicts.add(`${otherRow},${otherColumn}`);
-                            conflicts.add(`${row},${column}`);
-                        } else {
-                            seen.set(value, [row, column]);
-                        }
-                    }
-                }
-
-                for (let i = 0; i < 9; i++) {
-                    checkGroup(Array.from({ length: 9 }, (_, j) => [i, j]));
-                    checkGroup(Array.from({ length: 9 }, (_, j) => [j, i]));
-                }
-                for (let boxRow = 0; boxRow < 9; boxRow += 3) {
-                    for (let boxColumn = 0; boxColumn < 9; boxColumn += 3) {
-                        const cells = [];
-                        for (let row = boxRow; row < boxRow + 3; row++) {
-                            for (let column = boxColumn; column < boxColumn + 3; column++) {
-                                cells.push([row, column]);
-                            }
-                        }
-                        checkGroup(cells);
-                    }
-                }
-                return conflicts;
-            }
-
-            function updateBoard() {
-                const conflicts = findConflicts();
-                const isComplete = board.every(row => row.every(value => value !== 0));
-                const isSolved = isComplete && board.every((row, rowIndex) =>
-                    row.every((value, columnIndex) => value === solution[rowIndex][columnIndex])
-                );
-
-                tableBody.querySelectorAll("input").forEach((input, index) => {
-                    const row = Math.floor(index / 9);
-                    const column = index % 9;
-                    input.classList.toggle("invalid", conflicts.has(`${row},${column}`));
-                });
-
-                message.classList.toggle("success", conflicts.size === 0 && isSolved);
-
-                if (conflicts.size > 0) {
-                    message.textContent = "Highlighted numbers conflict in a row, column, or box.";
-                } else if (isSolved) {
-                    message.textContent = "Congratulations! You solved the Sudoku.";
-                } else if (isComplete) {
-                    message.textContent = "The board is full, but the solution is not correct yet.";
-                } else {
-                    message.textContent = "Enter numbers 1–9 in the empty cells.";
-                }
-            }
-
-            function saveGame() {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                        puzzle,
-                        solution,
-                        board,
-                        difficulty: difficultySelect.value
-                    }));
-                    message.textContent = "Game saved in this browser.";
-                } catch {
-                    message.textContent = "Unable to save. Check your browser storage settings.";
-                }
-            }
-
-            function isValidSavedGame(saved) {
-                return saved && ["easy", "medium", "hard"].includes(saved.difficulty) &&
-                    [saved.puzzle, saved.solution, saved.board].every(grid =>
-                        Array.isArray(grid) && grid.length === 9 &&
-                        grid.every(row => Array.isArray(row) && row.length === 9 &&
-                            row.every(value => Number.isInteger(value) && value >= 0 && value <= 9))
-                    );
-            }
-
-            function restoreGame() {
-                try {
-                    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-                    if (!isValidSavedGame(saved)) return false;
-                    puzzle = saved.puzzle;
-                    solution = saved.solution;
-                    board = saved.board;
-                    difficultySelect.value = saved.difficulty;
-                    renderBoard();
-                    message.textContent = "Saved game restored.";
-                    return true;
-                } catch {
-                    return false;
-                }
-            }
-
-            document.getElementById("new-game").addEventListener("click", startNewGame);
-            document.getElementById("save-game").addEventListener("click", saveGame);
-            difficultySelect.addEventListener("change", startNewGame);
-
-            if (!restoreGame()) startNewGame();
-        })();
-    </script>
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
