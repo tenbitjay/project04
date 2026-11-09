@@ -101,6 +101,7 @@ select { background: white; }
 .controls {
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 10px;
     margin-top: 18px;
 }
@@ -239,7 +240,7 @@ dialog::backdrop { background: rgb(23 32 51 / 55%); backdrop-filter: blur(3px); 
         font-size: clamp(0.95rem, 5vw, 1.3rem);
     }
     .controls { gap: 8px; margin-top: 14px; }
-    .controls button { flex: 1; padding: 8px 6px; font-size: 0.9rem; }
+    .controls button { flex: 1 1 calc(50% - 8px); padding: 8px 6px; font-size: 0.9rem; }
     #message { margin-top: 10px; font-size: 0.9rem; }
     .score-result { font-size: 0.85rem; }
     .community-panel section { padding: 16px; }

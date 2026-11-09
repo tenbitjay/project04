@@ -31,10 +31,12 @@
     let activeTimeLimit = 600;
     let gameRunning = false;
     let gameExpired = false;
+    let gameAssisted = false;
     let scoreSubmitted = false;
     let client = null;
     let currentUserId = null;
     let playerNickname = null;
+    let isAdmin = false;
     let authMode = "signup";
     let captchaToken = null;
     let captchaWidgetId = null;
@@ -91,6 +93,13 @@
         });
     }
 
+    function updateGameControls() {
+        document.getElementById("suggestion").disabled = !gameRunning;
+        const solveButton = document.getElementById("solve-game");
+        solveButton.hidden = !isAdmin;
+        solveButton.disabled = !gameRunning;
+    }
+
     function updateTimer() {
         if (!gameRunning) return;
         const seconds = elapsedSeconds();
@@ -115,6 +124,7 @@
         gameFinishedAt = null;
         gameRunning = true;
         gameExpired = false;
+        gameAssisted = false;
         scoreSubmitted = false;
 
         const cells = shuffled(Array.from({ length: 81 }, (_, index) => index));
@@ -131,6 +141,7 @@
         document.getElementById("score-result").textContent = "";
         document.getElementById("start-game").textContent = "Start new game";
         renderBoard();
+        updateGameControls();
         updateTimer();
         message.textContent = "New game started. Good luck!";
     }
@@ -212,6 +223,7 @@
         gameRunning = false;
         gameExpired = true;
         setBoardEnabled(false);
+        updateGameControls();
         message.classList.remove("success");
         message.textContent = `Time is up for this ${difficultyLabel(activeDifficulty)} game. Start a new game to try again.`;
     }
@@ -238,10 +250,16 @@
             gameFinishedAt = Date.now();
             gameRunning = false;
             setBoardEnabled(false);
+            updateGameControls();
             timer.textContent = formatDuration(elapsedSeconds());
             message.classList.add("success");
             message.textContent = "Congratulations! You solved the Sudoku.";
-            submitScore();
+            if (gameAssisted) {
+                document.getElementById("score-result").textContent =
+                    "This assisted solve does not count toward the leaderboard.";
+            } else {
+                submitScore();
+            }
             return;
         }
 
@@ -254,6 +272,60 @@
             message.textContent = "The board is full, but the solution is not correct yet.";
         } else if (gameRunning) {
             message.textContent = "Enter numbers 1–9 in the empty cells.";
+        }
+    }
+
+    function giveSuggestion() {
+        if (!gameRunning) return;
+        const emptyCells = [];
+        for (let row = 0; row < 9; row++) {
+            for (let column = 0; column < 9; column++) {
+                if (puzzle[row][column] === 0 && board[row][column] === 0) {
+                    emptyCells.push([row, column]);
+                }
+            }
+        }
+        if (!emptyCells.length) return;
+
+        const [row, column] = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        board[row][column] = solution[row][column];
+        gameAssisted = true;
+        renderBoard();
+        if (gameRunning) {
+            message.textContent =
+                `Suggestion: row ${row + 1}, column ${column + 1} is ${solution[row][column]}. ` +
+                "Assisted games do not count toward the leaderboard.";
+        }
+    }
+
+    async function solveGame() {
+        if (!isAdmin || !gameRunning) return;
+        const solveButton = document.getElementById("solve-game");
+        solveButton.disabled = true;
+        message.textContent = "Checking admin access…";
+
+        try {
+            const { data, error } = await client.rpc("is_sudoku_admin");
+            if (error) throw error;
+            if (data !== true) {
+                isAdmin = false;
+                updateGameControls();
+                message.textContent = "Admin access is required to solve the puzzle.";
+                return;
+            }
+            if (!gameRunning) return;
+
+            gameAssisted = true;
+            board = solution.map(row => [...row]);
+            renderBoard();
+            if (gameRunning) {
+                message.textContent =
+                    "The solution was filled in. This assisted game does not count toward the leaderboard.";
+            }
+        } catch (error) {
+            message.textContent = `Could not verify admin access: ${error.message}`;
+        } finally {
+            updateGameControls();
         }
     }
 
@@ -270,7 +342,8 @@
                 board,
                 difficulty: activeDifficulty,
                 timeLimit: activeTimeLimit,
-                elapsedSeconds: elapsedSeconds()
+                elapsedSeconds: elapsedSeconds(),
+                assisted: gameAssisted
             }));
             message.textContent = "Game saved in this browser.";
         } catch {
@@ -284,6 +357,7 @@
             VALID_TIME_LIMITS.includes(saved.timeLimit) &&
             Number.isInteger(saved.elapsedSeconds) && saved.elapsedSeconds >= 0 &&
             (saved.timeLimit === 0 || saved.elapsedSeconds < saved.timeLimit) &&
+            (saved.assisted === undefined || typeof saved.assisted === "boolean") &&
             [saved.puzzle, saved.solution, saved.board].every(grid =>
                 Array.isArray(grid) && grid.length === 9 &&
                 grid.every(row => Array.isArray(row) && row.length === 9 &&
@@ -302,6 +376,7 @@
             puzzle = saved.puzzle;
             solution = saved.solution;
             board = saved.board;
+            gameAssisted = saved.assisted === true;
             gameStartedAt = Date.now() - saved.elapsedSeconds * 1000;
             gameFinishedAt = null;
             gameRunning = true;
@@ -313,6 +388,7 @@
             document.getElementById("score-result").textContent = "";
             document.getElementById("start-game").textContent = "Start new game";
             renderBoard();
+            updateGameControls();
             message.textContent = "Saved game restored.";
             updateTimer();
             return true;
@@ -597,6 +673,7 @@
     }
 
     async function setPlayer(user, username) {
+        const { data: adminStatus, error: adminError } = await client.rpc("is_sudoku_admin");
         const { data, error } = await client.rpc("set_my_nickname", {
             p_nickname: username
         });
@@ -604,9 +681,12 @@
 
         currentUserId = user.id;
         playerNickname = data;
+        isAdmin = !adminError && adminStatus === true;
+        updateGameControls();
         document.getElementById("current-player").textContent = `Player: ${playerNickname}`;
-        document.getElementById("community-status").textContent =
-            "Scores and chat update live.";
+        document.getElementById("community-status").textContent = adminError
+            ? `Admin controls unavailable. Run the latest supabase/setup.sql: ${adminError.message}`
+            : "Scores and chat update live.";
         main.hidden = false;
         communityPanel.hidden = false;
         if (authDialog.open) authDialog.close();
@@ -764,11 +844,15 @@
         if (scoresChannel) client.removeChannel(scoresChannel);
         currentUserId = null;
         playerNickname = null;
+        isAdmin = false;
         gameRunning = false;
+        updateGameControls();
         showAuthDialog();
         setAuthMode("signin");
     });
 
+    document.getElementById("suggestion").addEventListener("click", giveSuggestion);
+    document.getElementById("solve-game").addEventListener("click", solveGame);
     setAuthMode("signup");
     window.setInterval(updateTimer, 1000);
     showAuthDialog();

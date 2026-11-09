@@ -7,6 +7,10 @@ create table if not exists public.profiles (
 create unique index if not exists profiles_nickname_lower_unique
     on public.profiles (lower(nickname));
 
+create table if not exists public.sudoku_admins (
+    user_id uuid primary key references auth.users (id) on delete cascade
+);
+
 create table if not exists public.scores (
     user_id uuid not null references auth.users (id) on delete cascade,
     difficulty text not null check (difficulty in ('easy', 'medium', 'hard')),
@@ -53,6 +57,7 @@ create index if not exists chat_messages_user_created_at_idx
     on public.chat_messages (user_id, created_at desc);
 
 alter table public.profiles enable row level security;
+alter table public.sudoku_admins enable row level security;
 alter table public.scores enable row level security;
 alter table public.chat_messages enable row level security;
 
@@ -69,7 +74,21 @@ create policy "Public can read chat"
     on public.chat_messages for select to anon, authenticated using (true);
 
 revoke all on public.profiles, public.scores, public.chat_messages from public, anon, authenticated;
+revoke all on public.sudoku_admins from public, anon, authenticated;
 grant select on public.profiles, public.scores, public.chat_messages to anon, authenticated;
+
+create or replace function public.is_sudoku_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select exists (
+        select 1 from public.sudoku_admins
+        where user_id = auth.uid()
+    );
+$$;
 
 create or replace function public.set_my_nickname(p_nickname text)
 returns text
@@ -245,11 +264,13 @@ end;
 $$;
 
 revoke all on function public.set_my_nickname(text) from public;
+revoke all on function public.is_sudoku_admin() from public, anon, authenticated;
 revoke all on function public.get_leaderboard() from public;
 revoke all on function public.record_sudoku_score(text, integer, integer) from public;
 revoke all on function public.send_chat_message(text) from public;
 
 grant execute on function public.set_my_nickname(text) to authenticated;
+grant execute on function public.is_sudoku_admin() to authenticated;
 grant execute on function public.get_leaderboard() to anon, authenticated;
 grant execute on function public.record_sudoku_score(text, integer, integer) to authenticated;
 grant execute on function public.send_chat_message(text) to authenticated;

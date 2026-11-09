@@ -6,12 +6,38 @@ A browser-based Sudoku game with a global leaderboard and world chat. GitHub Pag
 
 1. Create a Supabase project.
 2. In **Authentication → Sign In / Providers → Email**, enable email/password sign-in and **disable email confirmation**. Players use a unique username and password without entering an email. The app maps each username to an internal address on the reserved `.invalid` domain; these accounts cannot receive email or reset passwords.
-3. Open the Supabase **SQL Editor** and run [`supabase/setup.sql`](./supabase/setup.sql). It creates the tables and secure database functions for unique usernames, scores, and chat. It is safe to rerun to apply the score time-limit update.
+3. Open the Supabase **SQL Editor** and run [`supabase/setup.sql`](./supabase/setup.sql). It creates the tables and secure database functions for unique usernames, scores, chat, and admin checks. Rerun it when applying app database updates.
 4. In **Project Settings → API Keys**, copy the project URL (format `https://<project-ref>.supabase.co`) and the public `anon`/publishable key into [`js/config.js`](./js/config.js).
 5. To use the current username/password form without a CAPTCHA, turn off **Authentication → Bot and Abuse Protection → CAPTCHA** in Supabase. CAPTCHA is disabled by default in [`js/config.js`](./js/config.js); with protection disabled, account creation and sign-in do not require a challenge.
 6. Push the changes to `main`. GitHub Actions deploys the app to Pages.
 
 The project URL is **not** the Supabase dashboard URL. Never put a `service_role` or secret key in this app or commit one to GitHub.
+
+### Admin controls
+
+The admin player is `tenbit`. First, create that account and sign in once so its profile exists. Then, as the project owner, run this in the Supabase SQL Editor to grant its account the admin role:
+
+```sql
+do $$
+declare
+    admin_user_id uuid;
+begin
+    select id into admin_user_id
+    from public.profiles
+    where lower(nickname) = lower('tenbit');
+
+    if admin_user_id is null then
+        raise exception 'Sign in as tenbit once before granting admin access.';
+    end if;
+
+    insert into public.sudoku_admins (user_id)
+    values (admin_user_id)
+    on conflict (user_id) do nothing;
+end;
+$$;
+```
+
+Only this database role grant unlocks the **Solve** button. To revoke it, delete that user's row from `public.sudoku_admins` in the SQL Editor. All players can use **Suggestion** to reveal one correct empty cell at a time. Using a suggestion or Solve marks the game as assisted, so it will not submit a leaderboard score.
 
 ### Optional: keep CAPTCHA protection enabled
 
