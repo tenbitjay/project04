@@ -152,7 +152,7 @@ as $$
 $$;
 
 drop function if exists public.record_sudoku_score(text, integer);
-create function public.record_sudoku_score(
+create or replace function public.record_sudoku_score(
     p_difficulty text,
     p_elapsed_seconds integer,
     p_time_limit_seconds integer
