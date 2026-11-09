@@ -9,52 +9,92 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <dialog id="auth-dialog" aria-labelledby="auth-title">
+        <div class="auth-card">
+            <h1 id="auth-title">Welcome to Sudoku</h1>
+            <p class="instructions">Sign in or create a player account to continue.</p>
+            <div class="auth-tabs" role="tablist" aria-label="Account options">
+                <button id="show-signup" type="button" role="tab" aria-selected="true">Create account</button>
+                <button id="show-signin" type="button" class="secondary" role="tab" aria-selected="false">Sign in</button>
+            </div>
+            <form id="auth-form">
+                <label for="auth-username">Unique player name</label>
+                <input id="auth-username" name="username" type="text" minlength="3" maxlength="20"
+                       autocomplete="username" required>
+                <small>3–20 letters, numbers, underscores, or hyphens.</small>
+                <label for="auth-password">Password</label>
+                <input id="auth-password" name="password" type="password" minlength="8" maxlength="72"
+                       autocomplete="new-password" required>
+                <small>At least 8 characters. Password recovery is not available for username-only accounts.</small>
+                <button id="auth-submit" type="submit">Create account</button>
+            </form>
+            <p id="auth-status" class="auth-status" role="status" aria-live="polite"></p>
+        </div>
+    </dialog>
+
     <div class="page-layout">
-        <main id="sudoku-app">
-            <h1>Sudoku</h1>
+        <main id="sudoku-app" hidden>
+            <header class="game-header">
+                <h1>Sudoku</h1>
+                <div class="account-bar">
+                    <span id="current-player"></span>
+                    <button id="sign-out" type="button" class="secondary">Sign out</button>
+                </div>
+            </header>
             <p class="instructions">Fill every row, column, and 3×3 box with numbers 1–9.</p>
 
-            <div class="toolbar">
-                <label for="difficulty">Difficulty</label>
-                <select id="difficulty">
-                    <option value="easy">Easy</option>
-                    <option value="medium" selected>Medium</option>
-                    <option value="hard">Hard</option>
-                </select>
-                <span id="game-timer" aria-label="Time elapsed">00:00</span>
-            </div>
+            <form id="game-setup" class="game-setup">
+                <div class="setup-fields">
+                    <label for="difficulty">Difficulty
+                        <select id="difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </label>
+                    <label for="time-limit">Time limit
+                        <select id="time-limit">
+                            <option value="300">5 minutes</option>
+                            <option value="600" selected>10 minutes</option>
+                            <option value="900">15 minutes</option>
+                            <option value="0">No time limit</option>
+                        </select>
+                    </label>
+                </div>
+                <p class="score-explanation">
+                    Score = difficulty points (Easy 1,000 · Medium 2,000 · Hard 3,000)
+                    + up to 600 speed points. Faster correct solves earn a bigger bonus.
+                    The selected limit is shown with your score; the speed bonus uses the
+                    same 15-minute scale for every limit. No-limit games use that scale too.
+                </p>
+                <button id="start-game" type="submit">Start game</button>
+            </form>
 
-            <div class="board-wrap">
-                <table id="board" aria-label="Sudoku puzzle">
-                    <tbody></tbody>
-                </table>
-            </div>
-
-            <div class="controls">
-                <button id="new-game" type="button">New Game</button>
-                <button id="save-game" type="button" class="secondary">Save Game</button>
-            </div>
-            <p id="message" role="status" aria-live="polite"></p>
+            <section id="game-content" hidden>
+                <div class="game-summary">
+                    <span id="game-settings-label"></span>
+                    <span id="game-timer" aria-label="Time elapsed">00:00</span>
+                </div>
+                <div class="board-wrap">
+                    <table id="board" aria-label="Sudoku puzzle">
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="controls">
+                    <button id="new-game" type="button">New Game</button>
+                    <button id="save-game" type="button" class="secondary">Save Game</button>
+                </div>
+                <p id="message" role="status" aria-live="polite"></p>
+                <p id="score-result" class="score-result" role="status" aria-live="polite"></p>
+            </section>
         </main>
 
-        <aside class="community-panel" aria-label="Sudoku community">
+        <aside id="community-panel" class="community-panel" aria-label="Sudoku community" hidden>
             <section class="player-section">
-                <h2>Join the community</h2>
+                <h2>Global community</h2>
                 <p id="community-status" class="community-status" role="status" aria-live="polite">
                     Connecting to the community…
                 </p>
-                <form id="join-form" class="join-form" hidden>
-                    <label for="nickname">Choose a nickname</label>
-                    <div class="inline-form">
-                        <input id="nickname" name="nickname" type="text" minlength="2" maxlength="20"
-                               autocomplete="nickname" pattern="[A-Za-z0-9][A-Za-z0-9 _-]{1,19}" required>
-                        <button type="submit">Join</button>
-                    </div>
-                    <small>2–20 letters, numbers, spaces, underscores, or hyphens.</small>
-                </form>
-                <button id="change-nickname" type="button" class="secondary change-nickname" hidden>
-                    Change nickname
-                </button>
             </section>
 
             <section class="leaderboard-section">
@@ -62,7 +102,7 @@
                     <h2>Global leaderboard</h2>
                     <button id="refresh-leaderboard" type="button" class="secondary refresh-button">Refresh</button>
                 </div>
-                <p class="section-note">Points add up across your best Easy, Medium, and Hard games.</p>
+                <p class="section-note">Your best Easy, Medium, and Hard scores add to your total.</p>
                 <ol id="leaderboard" class="leaderboard-list" aria-live="polite">
                     <li class="empty-state">Scores will appear here.</li>
                 </ol>
