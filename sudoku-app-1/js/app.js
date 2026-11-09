@@ -595,6 +595,11 @@
         renderChat();
     }
 
+    function setChatEnabled(enabled) {
+        chatInput.disabled = !enabled;
+        chatForm.querySelector('button[type="submit"]').disabled = !enabled;
+    }
+
     async function refreshChat() {
         const status = document.getElementById("chat-status");
         status.textContent = "Refreshing chat…";
@@ -615,6 +620,31 @@
             status.textContent = `Could not load chat: ${error.message}`;
         }
     }
+
+    chatForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const body = chatInput.value.trim();
+        if (!currentUserId || !body) return;
+
+        const submitButton = chatForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        document.getElementById("chat-status").textContent = "Sending message…";
+        try {
+            const { data, error } = await client.rpc("send_chat_message", {
+                p_body: body
+            });
+            if (error) throw error;
+
+            chatInput.value = "";
+            if (Array.isArray(data)) data.forEach(addChatMessage);
+            document.getElementById("chat-status").textContent = "Message sent.";
+        } catch (error) {
+            document.getElementById("chat-status").textContent =
+                `Could not send message: ${error.message}`;
+        } finally {
+            setChatEnabled(Boolean(currentUserId));
+        }
+    });
 
     async function submitScore() {
         if (!client || !playerNickname || scoreSubmitted) return;
@@ -687,6 +717,7 @@
         document.getElementById("community-status").textContent = adminError
             ? `Admin controls unavailable. Run the latest supabase/setup.sql: ${adminError.message}`
             : "Scores and chat update live.";
+        setChatEnabled(true);
         main.hidden = false;
         communityPanel.hidden = false;
         if (authDialog.open) authDialog.close();
@@ -845,6 +876,7 @@
         currentUserId = null;
         playerNickname = null;
         isAdmin = false;
+        setChatEnabled(false);
         gameRunning = false;
         updateGameControls();
         showAuthDialog();
