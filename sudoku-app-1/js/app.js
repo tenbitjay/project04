@@ -36,6 +36,10 @@
     let currentUserId = null;
     let playerNickname = null;
     let authMode = "signup";
+    let captchaToken = null;
+    let captchaWidgetId = null;
+    let captchaLoadPromise = null;
+    let authRequestPending = false;
     let chatById = new Map();
     let chatChannel = null;
     let scoresChannel = null;
@@ -326,6 +330,7 @@
         document.getElementById("auth-submit").textContent = signup ? "Create account" : "Sign in";
         authPassword.autocomplete = signup ? "new-password" : "current-password";
         authStatus.textContent = "";
+        resetCaptcha();
     }
 
     function showAuthDialog() {
@@ -333,6 +338,79 @@
         communityPanel.hidden = true;
         authStatus.textContent = "";
         if (!authDialog.open) authDialog.showModal();
+        initializeCaptcha().catch(error => {
+            document.getElementById("captcha-help").textContent = error.message;
+            document.getElementById("auth-submit").disabled = true;
+        });
+    }
+
+    function resetCaptcha() {
+        captchaToken = null;
+        const submitButton = document.getElementById("auth-submit");
+        submitButton.disabled = authRequestPending || Boolean(
+            window.SUDOKU_SUPABASE_CONFIG &&
+            window.SUDOKU_SUPABASE_CONFIG.turnstileSiteKey
+        );
+        if (captchaWidgetId !== null && window.turnstile) {
+            window.turnstile.reset(captchaWidgetId);
+        }
+    }
+
+    function loadTurnstile() {
+        if (window.turnstile) return Promise.resolve();
+        if (captchaLoadPromise) return captchaLoadPromise;
+
+        captchaLoadPromise = new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+                if (window.turnstile) resolve();
+                else reject(new Error("Cloudflare Turnstile loaded without its API."));
+            };
+            script.onerror = () => reject(new Error("Could not load Cloudflare Turnstile. Check your connection."));
+            document.head.appendChild(script);
+        });
+        return captchaLoadPromise;
+    }
+
+    async function initializeCaptcha() {
+        const help = document.getElementById("captcha-help");
+        const submitButton = document.getElementById("auth-submit");
+        const siteKey = window.SUDOKU_SUPABASE_CONFIG &&
+            window.SUDOKU_SUPABASE_CONFIG.turnstileSiteKey;
+
+        if (!siteKey) {
+            document.getElementById("captcha-container").hidden = true;
+            help.hidden = true;
+            submitButton.disabled = authRequestPending;
+            return;
+        }
+        document.getElementById("captcha-container").hidden = false;
+        help.hidden = false;
+        await loadTurnstile();
+        if (captchaWidgetId !== null) return;
+
+        captchaWidgetId = window.turnstile.render("#captcha-container", {
+            sitekey: siteKey,
+            callback: token => {
+                captchaToken = token;
+                help.textContent = "Security check complete.";
+                submitButton.disabled = authRequestPending;
+            },
+            "expired-callback": () => {
+                captchaToken = null;
+                help.textContent = "Security check expired. Please complete it again.";
+                submitButton.disabled = true;
+            },
+            "error-callback": () => {
+                captchaToken = null;
+                help.textContent = "Security check failed to load. Refresh the page and try again.";
+                submitButton.disabled = true;
+            }
+        });
+        help.textContent = "Complete the security check to continue.";
     }
 
     function showCommunityError(error) {
@@ -599,15 +677,28 @@
             authUsername.focus();
             return;
         }
+        const captchaRequired = Boolean(
+            window.SUDOKU_SUPABASE_CONFIG &&
+            window.SUDOKU_SUPABASE_CONFIG.turnstileSiteKey
+        );
+        if (captchaRequired && !captchaToken) {
+            authStatus.textContent = "Complete the security check before continuing.";
+            return;
+        }
         const email = authEmail(username);
         const button = document.getElementById("auth-submit");
         button.disabled = true;
+        authRequestPending = true;
         authStatus.textContent = authMode === "signup" ? "Creating your account…" : "Signing in…";
 
         try {
             let user;
             if (authMode === "signup") {
-                const { data, error } = await client.auth.signUp({ email, password });
+                const { data, error } = await client.auth.signUp({
+                    email,
+                    password,
+                    options: captchaToken ? { captchaToken } : {}
+                });
                 if (error) throw error;
                 if (!data.session) {
                     authStatus.textContent =
@@ -618,7 +709,11 @@
                 }
                 user = data.user;
             } else {
-                const { data, error } = await client.auth.signInWithPassword({ email, password });
+                const { data, error } = await client.auth.signInWithPassword({
+                    email,
+                    password,
+                    options: captchaToken ? { captchaToken } : {}
+                });
                 if (error) throw error;
                 user = data.user;
             }
@@ -637,7 +732,8 @@
                 authStatus.textContent = detail;
             }
         } finally {
-            button.disabled = false;
+            authRequestPending = false;
+            resetCaptcha();
         }
     });
 

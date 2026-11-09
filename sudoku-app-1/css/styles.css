@@ -210,6 +210,9 @@ dialog::backdrop { background: rgb(23 32 51 / 55%); backdrop-filter: blur(3px); 
 #auth-form label { margin-top: 4px; font-weight: 650; }
 #auth-form input { width: 100%; background: white; }
 #auth-form small { margin: -4px 0 4px; color: #667085; line-height: 1.4; }
+.captcha-container { min-height: 0; }
+.captcha-container:empty { display: none; }
+.captcha-help { color: #667085; }
 #auth-form button { margin-top: 8px; }
 .auth-status { min-height: 1.4em; margin: 12px 0 0; color: #a12c20; font-size: 0.9rem; }
 

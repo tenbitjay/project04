@@ -26,6 +26,10 @@
                 <input id="auth-password" name="password" type="password" minlength="8" maxlength="72"
                        autocomplete="new-password" required>
                 <small>At least 8 characters. Password recovery is not available for username-only accounts.</small>
+                <div id="captcha-container" class="captcha-container" aria-label="Bot protection challenge"></div>
+                <small id="captcha-help" class="captcha-help">
+                    Complete the security check to continue.
+                </small>
                 <button id="auth-submit" type="submit">Create account</button>
             </form>
             <p id="auth-status" class="auth-status" role="status" aria-live="polite"></p>
